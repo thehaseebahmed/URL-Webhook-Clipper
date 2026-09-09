@@ -1,9 +1,7 @@
 /**
- * Sender Module - Handles webhook and Airtable sending logic
+ * Sender Module - Handles webhook sending logic
  * V8.0 - FIXED: Template as separate field for Make.com filters
  */
-
-import { airtableSender } from './airtableSender.js';
 
 export const sender = {
   /**
@@ -67,17 +65,6 @@ export const sender = {
         result = { webhook: await this.sendToWebhook(destination, basePayload) };
         if (result.webhook.success) {
           await this.saveLastUsedDestination('webhook', destination.id, destination.name);
-        }
-      } else if (destination.type === 'airtable') {
-        const tableSelect = document.getElementById('airtableTableSelect');
-        if (!tableSelect?.value) {
-          throw new Error('Bitte wähle eine Tabelle aus');
-        }
-        
-        result = { airtable: await this.sendToAirtable(destination, tableSelect.value, basePayload) };
-        if (result.airtable.success) {
-          const tableName = tableSelect.options[tableSelect.selectedIndex].text;
-          await this.saveLastUsedDestination('airtable', `${destination.id}|${tableSelect.value}`, `${destination.name} - ${tableName}`);
         }
       } else {
         throw new Error('Ungültiger Destination-Typ');
@@ -173,126 +160,6 @@ export const sender = {
   },
 
   /**
-   * Send to Airtable
-   */
-  async sendToAirtable(destination, tableId, basePayload) {
-    try {
-      console.log('📤 [AIRTABLE] Starting send to:', { 
-        baseId: destination.config.baseId, 
-        tableId 
-      });
-
-      const table = destination.config.tables?.find(t => t.id === tableId);
-      if (!table) {
-        throw new Error('Selected table not found.');
-      }
-
-      const tableConfig = destination.config.configuredTables?.[tableId];
-      if (!tableConfig) {
-        throw new Error('Table configuration not found. Please configure the table in settings.');
-      }
-
-      console.log('📤 [AIRTABLE] Config found:', {
-        baseName: destination.config.name,
-        tableName: table.name,
-        hasFieldMappings: !!tableConfig.fieldMappings,
-        fieldMappings: tableConfig.fieldMappings
-      });
-
-      const fieldMappings = tableConfig.fieldMappings || {};
-      const fields = {};
-
-      // Map standard fields (URL, Title) using FIELD IDs
-      if (fieldMappings.url) {
-        fields[fieldMappings.url] = basePayload.url;
-        console.log('📤 [AIRTABLE] Mapped URL:', { fieldId: fieldMappings.url, value: basePayload.url });
-      }
-      
-      if (fieldMappings.title) {
-        fields[fieldMappings.title] = basePayload.title;
-        console.log('📤 [AIRTABLE] Mapped Title:', { fieldId: fieldMappings.title, value: basePayload.title });
-      }
-
-      // Collect ALL dynamic field values
-      const dynamicFields = document.querySelectorAll('#airtableFieldMappings [data-airtable-field-id]');
-      console.log('📤 [AIRTABLE] Found dynamic fields:', dynamicFields.length);
-
-      dynamicFields.forEach((el, index) => {
-        if (el.readOnly) return;
-        
-        const fieldId = el.dataset.airtableFieldId;
-        const fieldType = el.dataset.airtableFieldType;
-        let value;
-
-        console.log(`📤 [AIRTABLE] Processing field ${index + 1}:`, {
-          fieldId,
-          fieldType,
-          tagName: el.tagName,
-          type: el.type,
-          multiple: el.multiple
-        });
-
-        // Handle different field types correctly
-        if (el.type === 'checkbox') {
-          value = el.checked;
-        } else if (el.tagName === 'SELECT' && el.multiple) {
-          // Multiple select (e.g., multipleCollaborators)
-          value = Array.from(el.selectedOptions)
-            .map(opt => opt.value)
-            .filter(v => v !== '');
-          console.log('📤 [AIRTABLE] Multiple select values:', value);
-        } else if (el.tagName === 'SELECT') {
-          // Single select
-          value = el.value;
-          if (value === '') return;
-        } else {
-          // Text, number, date, etc.
-          value = el.value;
-          if (value === '') return;
-        }
-
-        console.log('📤 [AIRTABLE] Field value:', { fieldId, value, type: typeof value });
-        fields[fieldId] = value;
-      });
-
-      console.log('📤 [AIRTABLE] Final fields object:', {
-        fieldCount: Object.keys(fields).length,
-        fields: fields
-      });
-
-      // Send with correct structure
-      const payloadForSender = {
-        record: {
-          fields: fields
-        },
-        attachments: basePayload.attachments
-      };
-
-      // Create full config for sender (with token, baseId, tableId)
-      const fullConfig = {
-        token: destination.config.token,
-        baseId: destination.config.baseId,
-        tableId: tableId,
-        name: destination.config.name
-      };
-
-      console.log('📤 [AIRTABLE] Calling airtableSender.send...');
-      const response = await airtableSender.send(fullConfig, payloadForSender);
-      
-      console.log('✅ [AIRTABLE] Send successful:', response);
-      return { 
-        success: true, 
-        recordId: response.records?.[0]?.id || 'unknown', 
-        response: JSON.stringify(response, null, 2) 
-      };
-      
-    } catch (error) {
-      console.error('❌ [AIRTABLE] Error:', error);
-      return { success: false, error: error.message };
-    }
-  },
-
-  /**
    * Show combined results
    */
   showResults(results, notesInput) {
@@ -314,17 +181,6 @@ export const sender = {
         statusMessage = '❌ Webhook failed';
         statusType = 'error';
         notesContent = `=== WEBHOOK ERROR ===\n${results.webhook.error}`;
-      }
-    }
-
-    if (results.airtable) {
-      if (results.airtable.success) {
-        statusMessage = '✅ Airtable sent successfully';
-        notesContent = `=== AIRTABLE RESPONSE ===\nRecord ID: ${results.airtable.recordId}\n\n${results.airtable.response}`;
-      } else {
-        statusMessage = '❌ Airtable failed';
-        statusType = 'error';
-        notesContent = `=== AIRTABLE ERROR ===\n${results.airtable.error}`;
       }
     }
 

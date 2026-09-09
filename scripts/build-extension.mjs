@@ -6,7 +6,7 @@ import archiver from 'archiver';
 const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 const outDir = join(rootDir, 'dist-zip');
 const manifest = JSON.parse(readFileSync(join(rootDir, 'manifest.json'), 'utf8'));
-const outFile = join(outDir, `url-webhook-clipper-v${manifest.version}.zip`);
+const outFile = join(outDir, `send-to-webhook-v${manifest.version}.zip`);
 
 // Only the files Chrome actually loads per manifest.json - not the Vite/React
 // scaffold (src/, index.html) or the stale root-level popup.html/popup.js.

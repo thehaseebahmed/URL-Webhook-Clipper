@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>URL Webhook Clipper</title>
+  <title>Send to Webhook</title>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -10,7 +10,7 @@
     <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">
       <!-- Icon will be inserted via JavaScript -->
     </button>
-    <h2>URL Webhook Clipper</h2>
+    <h2>Send to Webhook</h2>
     <button class="close-popup" id="closePopup">×</button>
   </div>
   <div class="container">
@@ -64,23 +64,10 @@
       <button class="close-btn" id="closeConfigBtn">×</button>
     </div>
 
-    <!-- Tab Navigation -->
-    <div class="config-tabs">
-      <button class="config-tab active" id="webhooksTab">Webhooks</button>
-      <button class="config-tab" id="airtableTab">Airtable</button>
-    </div>
-
-    <!-- Webhooks Tab Content -->
     <div id="webhookList" class="webhook-list">
       <!-- Webhook items will be inserted here -->
     </div>
     <button id="addWebhookBtn" class="add-webhook">+ Add New Webhook</button>
-
-    <!-- Airtable Tab Content -->
-    <div id="airtableList" class="airtable-list" style="display: none;">
-      <!-- Airtable Base Connection items will be inserted here -->
-    </div>
-    <button id="addAirtableBtn" class="add-airtable" style="display: none;">+ Add Airtable Base</button>
 
     <!-- Import/Export Buttons -->
     <div class="import-export-buttons">

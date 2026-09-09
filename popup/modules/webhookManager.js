@@ -423,24 +423,20 @@ export const webhookManager = {
   },
 
   /**
-   * Export configurations (Unified: Webhooks + Airtable)
+   * Export configurations (Webhooks)
    */
   async exportConfigurations() {
     try {
-      // ✅ FIX: Load from correct storage locations
       const webhookResult = await chrome.storage.sync.get(['webhookConfigs']);
-      const airtableResult = await chrome.storage.local.get(['airtableConfigs']);
-      
+
       const exportData = {
         version: '1.9',
         exportDate: new Date().toISOString(),
-        webhooks: webhookResult.webhookConfigs || [],
-        airtable: airtableResult.airtableConfigs || []
+        webhooks: webhookResult.webhookConfigs || []
       };
 
       console.log('📤 [EXPORT] Exporting:', {
-        webhooks: exportData.webhooks.length,
-        airtable: exportData.airtable.length
+        webhooks: exportData.webhooks.length
       });
 
       const dataStr = JSON.stringify(exportData, null, 2);
@@ -466,11 +462,10 @@ export const webhookManager = {
    * Supports:
    * 1. Legacy v1.7 Array: [{id, label, url, templates}]
    * 2. Legacy v1.7 Object: {webhooks: [...]}
-   * 3. New v1.9 Unified: {version: '1.9', webhooks: [...], airtable: [...]}
+   * 3. New v1.9 Unified: {version: '1.9', webhooks: [...]}
    */
   detectAndNormalizeImportFormat(importData) {
     let webhookConfigs = [];
-    let airtableConfigs = [];
     let detectedFormat = 'unknown';
 
     // Format 1: Legacy Array [{id, label, url, templates}]
@@ -495,11 +490,10 @@ export const webhookManager = {
         templates: webhook.templates || []
       }));
     }
-    // Format 3: New Unified {version: '1.9', webhooks: [...], airtable: [...]}
+    // Format 3: New Unified {version: '1.9', webhooks: [...]}
     else if (importData.version === '1.9') {
       detectedFormat = 'unified-v1.9';
       webhookConfigs = importData.webhooks || [];
-      airtableConfigs = importData.airtable || [];
     }
     else {
       throw new Error('Unrecognized configuration format');
@@ -507,20 +501,19 @@ export const webhookManager = {
 
     return {
       webhookConfigs,
-      airtableConfigs,
       detectedFormat
     };
   },
 
   /**
-   * Import configurations (Unified: Webhooks + Airtable)
-   * Now supports legacy v1.7 formats!
+   * Import configurations (Webhooks)
+   * Supports legacy v1.7 formats!
    */
   importConfigurations() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    
+
     input.onchange = async (e) => {
       try {
         const file = e.target.files[0];
@@ -530,7 +523,7 @@ export const webhookManager = {
         const importData = JSON.parse(text);
 
         // Detect format and normalize
-        const { webhookConfigs, airtableConfigs, detectedFormat } = 
+        const { webhookConfigs, detectedFormat } =
           this.detectAndNormalizeImportFormat(importData);
 
         // Build confirmation message
@@ -545,43 +538,33 @@ export const webhookManager = {
 
         const confirmMsg = formatInfo +
           `\nImport configuration?\n\n` +
-          `Webhooks: ${webhookConfigs.length}\n` +
-          `Airtable: ${airtableConfigs.length}\n\n` +
+          `Webhooks: ${webhookConfigs.length}\n\n` +
           `⚠️ This will replace your current configuration!`;
 
         if (!confirm(confirmMsg)) return;
 
         console.log('📥 [IMPORT] Importing:', {
           format: detectedFormat,
-          webhooks: webhookConfigs.length,
-          airtable: airtableConfigs.length
+          webhooks: webhookConfigs.length
         });
 
-        // ✅ FIX: Save to correct storage locations
         await chrome.storage.sync.set({ webhookConfigs: webhookConfigs });
-        await chrome.storage.local.set({ airtableConfigs: airtableConfigs });
 
         // Verify save
         const webhookVerify = await chrome.storage.sync.get(['webhookConfigs']);
-        const airtableVerify = await chrome.storage.local.get(['airtableConfigs']);
-        
+
         console.log('✅ [IMPORT] Verification:', {
-          webhooks: webhookVerify.webhookConfigs?.length,
-          airtable: airtableVerify.airtableConfigs?.length
+          webhooks: webhookVerify.webhookConfigs?.length
         });
 
         // Reload UI
         await this.loadConfigurations();
-        
-        // Reload Airtable configs
-        const airtableManager = await import('./airtableManager.js');
-        await airtableManager.airtableManager.loadConfigurations();
 
         // Reload background worker
         chrome.runtime.reload();
 
         window.showStatus(
-          `Configuration imported successfully (${detectedFormat})`, 
+          `Configuration imported successfully (${detectedFormat})`,
           'success'
         );
       } catch (error) {

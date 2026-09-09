@@ -1,32 +1,29 @@
-# URL Webhook Clipper
+# Send to Webhook
 
-A Chrome extension for clipping URLs, notes, and files to webhooks and Airtable with right-click context menu support.
+A Chrome extension for clipping URLs, notes, and files to webhooks with right-click context menu support.
 
-## Version 2.0 - Latest Updates
+## Version 1.0.0 - Latest Updates
 
-### 🎉 New in Version 2.0
-- ✅ **Right-Click Context Menu**: Send content directly from any webpage via context menu
-- ✅ **Unified Destination Dropdown**: Single dropdown for both Webhooks and Airtable
+### 🎉 New in Version 1.0.0
+- ✅ **Rebrand**: "URL Webhook Clipper" is now "Send to Webhook"
+- ✅ **Webhook-Only**: Airtable integration removed to keep the extension focused and simple
+- ✅ **Right-Click Context Menu**: Send content directly from any webpage via context menu — hidden entirely when no webhook is configured
 - ✅ **Clean Vertical Field Layout**: Apple-style form design with perfect alignment
-- ✅ **Airtable Integration**: Full support for Airtable bases and tables
-- ✅ **Dynamic Field Rendering**: Automatic field detection and mapping
 - ✅ **Improved UX**: Streamlined interface with better visual hierarchy
 - ✅ **Enhanced Error Handling**: Clear, contextual error messages
 - ✅ **Session Persistence**: Form data persists during browser session
 
-### 🔥 Version 2.0 Highlights
+### 🔥 Version 1.0.0 Highlights
 
 #### **Context Menu Integration**
 - Right-click on any page, link, image, or selected text
-- Choose destination from organized submenu (Webhooks / Airtable)
+- Choose a webhook destination from the "Send to Webhook" submenu
 - Automatic payload creation with URL, title, and selection
 - Success/error notifications
-- Works seamlessly with both Webhook and Airtable destinations
+- Menu item is hidden entirely until at least one webhook is configured
 
-#### **Unified Destination Management**
-- Single dropdown for all destinations (Webhooks + Airtable tables)
-- Visual grouping with optgroups
-- Icons for destination types (🔗 Webhooks, 📊 Airtable)
+#### **Destination Management**
+- Dropdown listing all configured webhook destinations
 - Dynamic field rendering based on selection
 
 #### **Apple-Style Design**
@@ -52,14 +49,6 @@ A Chrome extension for clipping URLs, notes, and files to webhooks and Airtable 
 - 📤 **Import/Export**: Backup and restore webhook configurations
 - ✅ **Test Connection**: Verify webhook URLs before sending
 
-### Airtable Integration
-- 📊 **Multiple Bases**: Connect to multiple Airtable bases
-- 🗂️ **Table Selection**: Choose specific tables within bases
-- 🔧 **Field Mapping**: Map extension fields to Airtable fields
-- 🎯 **Dynamic Fields**: Automatic field type detection
-- 👥 **Collaborator Support**: Select users from dropdown
-- ✅ **Validation**: Ensure all required fields are configured
-
 ## Installation
 
 1. Clone this repository
@@ -72,15 +61,15 @@ A Chrome extension for clipping URLs, notes, and files to webhooks and Airtable 
 ### Basic Workflow
 
 1. Click the extension icon to open the popup
-2. Select a destination (Webhook or Airtable table)
+2. Select a webhook destination
 3. Add notes (optional)
 4. Attach files (optional)
-5. Click "Send to Webhook/Airtable"
+5. Click "Send to Webhook"
 
-### Context Menu Workflow (New in v2.0)
+### Context Menu Workflow
 
 1. Right-click on any page, link, image, or selected text
-2. Hover over "Send to Webhook/Airtable"
+2. Hover over "Send to Webhook"
 3. Choose your destination from the submenu
 4. Content is sent automatically
 5. Receive success/error notification
@@ -97,28 +86,11 @@ A Chrome extension for clipping URLs, notes, and files to webhooks and Airtable 
 ### Webhook Configuration
 
 1. Click "⚙️ Configure" to open settings
-2. Navigate to "Webhooks" tab
-3. Add new webhooks with labels and URLs
-4. Create templates for each webhook
-5. Add descriptions to templates for context
-6. Test connection before saving
-7. Save configurations
-
-### Airtable Configuration
-
-1. Click "⚙️ Configure" to open settings
-2. Navigate to "Airtable" tab
-3. Add new Airtable base:
-   - Enter base name
-   - Paste Personal Access Token
-   - Enter Base ID
-4. Click "Fetch Tables" to load available tables
-5. For each table:
-   - Click "Configure Fields"
-   - Map URL and Title fields (required)
-   - Select additional fields to show in popup
-   - Save configuration
-6. Test connection before saving
+2. Add new webhooks with labels and URLs
+3. Create templates for each webhook
+4. Add descriptions to templates for context
+5. Test connection before saving
+6. Save configurations
 
 ### Import/Export
 
@@ -128,8 +100,8 @@ A Chrome extension for clipping URLs, notes, and files to webhooks and Airtable 
 ## File Structure
 
 ```
-URL-Webhook-Clipper/
-├── manifest.json           # Extension manifest (v2.0)
+Send-to-Webhook/
+├── manifest.json           # Extension manifest (v1.0.0)
 ├── background.js          # Background service worker with context menu
 ├── popup/
 │   ├── popup.html        # Main popup UI
@@ -139,10 +111,8 @@ URL-Webhook-Clipper/
 │       ├── storage.js    # Session storage management
 │       ├── theme.js      # Dark mode handling
 │       ├── fileHandler.js # File attachment logic
-│       ├── sender.js     # Webhook/Airtable sending logic
-│       ├── webhookManager.js # Webhook CRUD operations
-│       ├── airtableManager.js # Airtable CRUD operations
-│       └── airtableSender.js # Airtable API integration
+│       ├── sender.js     # Webhook sending logic
+│       └── webhookManager.js # Webhook CRUD operations
 ├── icons/
 │   ├── icon16.png
 │   ├── icon48.png
@@ -164,18 +134,13 @@ URL-Webhook-Clipper/
   - Theme preference
   - Persistent across browser sessions
 
-- **Local Storage** (`chrome.storage.local`):
-  - Airtable configurations (tokens, base IDs)
-  - Field mappings and table schemas
-  - Persistent across browser sessions
-
-### Context Menu Architecture (New in v2.0)
+### Context Menu Architecture
 
 - **Dynamic Menu Building**: Context menu updates automatically when destinations change
-- **Grouped Destinations**: Webhooks and Airtable tables organized in submenus
 - **Smart Payload Creation**: Automatically extracts URL, title, selection, and meta description
 - **Error Handling**: Shows notifications for success/failure
 - **Storage Monitoring**: Listens for config changes and rebuilds menu
+- **Empty State**: No menu item is shown at all when no webhook is configured
 
 ### Permissions
 
@@ -190,22 +155,6 @@ URL-Webhook-Clipper/
 - Documents: PDF, DOC, DOCX, XLS, XLSX, TXT
 - Images: JPG, JPEG, PNG, GIF, WEBP, SVG
 
-### Airtable Field Types Supported
-
-- ✅ Single Line Text
-- ✅ Long Text
-- ✅ Number
-- ✅ Date
-- ✅ Date & Time
-- ✅ Checkbox
-- ✅ Single Select
-- ✅ Multiple Select
-- ✅ Single Collaborator
-- ✅ Multiple Collaborators
-- ✅ URL
-- ✅ Email
-- ✅ Phone Number
-
 ## Development
 
 ### Module Structure
@@ -215,10 +164,8 @@ Each module is self-contained and exports its functionality:
 - **storage.js**: Handles all session storage operations
 - **theme.js**: Manages dark mode state and UI
 - **fileHandler.js**: Processes file attachments
-- **sender.js**: Sends data to webhooks and Airtable
+- **sender.js**: Sends data to webhooks
 - **webhookManager.js**: Manages webhook configurations
-- **airtableManager.js**: Manages Airtable configurations
-- **airtableSender.js**: Handles Airtable API communication
 
 ### Adding New Features
 
@@ -238,7 +185,17 @@ Each module is self-contained and exports its functionality:
 
 ## Changelog
 
-### Version 2.0 (Current)
+### Version 1.0.0 (Current) - Send to Webhook
+- 🎉 **Rebrand** from "URL Webhook Clipper" to "Send to Webhook"
+- ❌ **Removed Airtable integration** — webhook-only going forward
+- ✅ **Context menu hidden entirely** when no webhook is configured
+- ✅ **New extension icon**
+- ✅ **Version reset to 1.0.0** to mark the rebrand
+
+The entries below describe the extension's history under its previous name and
+version numbering ("URL Webhook Clipper", up to v2.0), before the v1.0.0 rebrand.
+
+### Version 2.0
 - 🎉 **Right-click context menu** for Webhooks and Airtable
 - ✅ **Unified destination dropdown** with visual grouping
 - ✅ **Clean vertical field layout** (Apple-style)
@@ -285,22 +242,17 @@ Each module is self-contained and exports its functionality:
 
 ## Known Limitations
 
-- Airtable attachments require Base64 → URL conversion (planned for future release)
 - Maximum 10MB file size for attachments
 - Context menu limited to 6 items per submenu (Chrome limitation)
-- Airtable API rate limit: 5 requests/second
 
 ## Roadmap
 
 ### Planned Features
-- 📎 Airtable attachment upload (Base64 → URL)
 - 🔍 Search/filter for destinations (when 10+ destinations)
 - 📊 Analytics and statistics
 - 🔄 Batch operations
-- ⚡ Two-phase lazy loading optimization
 - 🛡️ Field validation
 - 🔁 Error recovery with automatic retry
-- 💾 Schema caching (24h)
 
 ## License
 
@@ -318,4 +270,4 @@ Design by [Lipa LIFE](https://www.lipalife.de)
 
 ---
 
-**Version 2.0** - Built with ❤️ for productivity enthusiasts
+**Version 1.0.0** - Built with ❤️ for productivity enthusiasts

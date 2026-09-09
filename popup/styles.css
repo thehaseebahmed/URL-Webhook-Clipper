@@ -23,8 +23,7 @@ body.dark-mode {
   border-color: #404040;
 }
 
-.dark-mode .webhook-item,
-.dark-mode .airtable-item {
+.dark-mode .webhook-item {
   background-color: #2d2d2d;
   border-color: #404040;
 }
@@ -69,7 +68,6 @@ body.dark-mode {
 }
 
 .dark-mode .add-template,
-.dark-mode .add-airtable,
 .dark-mode .add-header {
   background-color: #3b3b3b;
   color: #e5e5e5;
@@ -79,18 +77,6 @@ body.dark-mode {
 .dark-mode .status-bar {
   background-color: #2d2d2d;
   border-top-color: #404040;
-}
-
-.dark-mode .config-tab {
-  background-color: #2d2d2d;
-  color: #a3a3a3;
-  border-color: #404040;
-}
-
-.dark-mode .config-tab.active {
-  background-color: #1a1a1a;
-  color: #e5e5e5;
-  border-bottom-color: #1a1a1a;
 }
 
 .dark-mode .test-feedback {
@@ -485,54 +471,20 @@ label {
   color: #4b5563;
 }
 
-/* Config Tabs */
-.config-tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.config-tab {
-  background: none;
-  border: none;
-  padding: 8px 16px;
-  cursor: pointer;
-  color: #6b7280;
-  font-weight: 500;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: all 0.2s ease;
-}
-
-.config-tab:hover {
-  color: #2563eb;
-  background-color: #f3f4f6;
-}
-
-.config-tab.active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
-  background: none;
-}
-
-.webhook-list,
-.airtable-list {
+.webhook-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.webhook-item,
-.airtable-item {
+.webhook-item {
   border: 1px solid #e5e7eb;
   padding: 12px;
   border-radius: 6px;
   transition: box-shadow 0.2s ease;
 }
 
-.webhook-item:hover,
-.airtable-item:hover {
+.webhook-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -577,7 +529,6 @@ label {
 }
 
 .add-template,
-.add-airtable,
 .add-header {
   background: none;
   border: 1px dashed #d1d5db;
@@ -590,15 +541,13 @@ label {
 }
 
 .add-template:hover,
-.add-airtable:hover,
 .add-header:hover {
   border-color: #2563eb;
   color: #2563eb;
   background-color: #eff6ff;
 }
 
-.add-webhook,
-.add-airtable {
+.add-webhook {
   margin-top: 16px;
 }
 
@@ -912,88 +861,6 @@ label {
   flex: 1;
 }
 
-/* Rate Limit Countdown */
-.rate-limit-info {
-  margin-top: 8px;
-  padding: 8px 12px;
-  background-color: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #92400e;
-  display: none;
-  align-items: center;
-  gap: 8px;
-}
-
-.rate-limit-info.visible {
-  display: flex;
-}
-
-.rate-limit-icon {
-  font-size: 14px;
-}
-
-.dark-mode .rate-limit-info {
-  background-color: #3a2a1a;
-  border-color: #fbbf24;
-  color: #fbbf24;
-}
-
-/* Airtable Custom Fields Alignment Fix */
-.divider {
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 16px 0;
-}
-
-.dark-mode .divider {
-  border-top-color: #404040;
-}
-
-.custom-fields-selector h5 {
-  margin-bottom: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-}
-
-.dark-mode .custom-fields-selector h5 {
-  color: #e5e5e5;
-}
-
-.custom-fields-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.custom-field-checkbox {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 0;
-}
-
-.custom-field-checkbox label {
-  order: 1;
-  font-size: 14px;
-  cursor: pointer;
-  color: #374151;
-  padding-right: 16px;
-}
-
-.dark-mode .custom-field-checkbox label {
-    color: #e5e5e5;
-}
-
-.custom-field-checkbox input[type="checkbox"] {
-  order: 2;
-  margin: 0;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
 /* Info State Messages */
 .info-state {
   padding: 16px;
@@ -1140,20 +1007,4 @@ label {
 
 .dark-mode .loader {
   color: #9ca3af;
-}
-
-/* 🎨 AIRTABLE FIELD MAPPINGS CONTAINER */
-#airtableFieldMappings {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-top: 12px;
-}
-
-#airtableFieldMappings .form-group {
-  margin-bottom: 12px;
-}
-
-#airtableFieldMappings .form-group:last-child {
-  margin-bottom: 0;
 }

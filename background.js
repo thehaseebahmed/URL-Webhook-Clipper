@@ -1,5 +1,5 @@
 /**
- * Background Service Worker - Version 2.0.6
+ * Background Service Worker
  * FIX: Context menu duplicate ID errors
  * - Added removeAll() before menu creation
  * - Added initialization guard
@@ -15,9 +15,12 @@ loadDestinations({ rebuildMenu: true });
 
 // Load destinations on startup
 chrome.runtime.onStartup.addListener(loadDestinations);
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   await loadDestinations();
-  console.log('✅ [BACKGROUND v2.0.6] Extension installed, context menu created');
+  if (details.reason === 'update') {
+    await chrome.storage.local.remove('airtableConfigs');
+  }
+  console.log('✅ [BACKGROUND] Extension installed, context menu created');
 });
 
 // Load destinations from storage
@@ -26,11 +29,7 @@ async function loadDestinations({ rebuildMenu = true } = {}) {
     // Load webhooks from sync storage
     const syncData = await chrome.storage.sync.get(['webhookConfigs']);
     webhookConfigs = syncData.webhookConfigs || [];
-    
-    // Load Airtable configs from local storage
-    const localData = await chrome.storage.local.get(['airtableConfigs']);
-    const airtableBases = localData.airtableConfigs || [];
-    
+
     // Build webhook destinations (with templates)
     const webhookDestinations = [];
     webhookConfigs.forEach(webhook => {
@@ -57,32 +56,11 @@ async function loadDestinations({ rebuildMenu = true } = {}) {
       }
     });
     
-    // Flatten Airtable tables into destinations
-    const airtableDestinations = [];
-    airtableBases.forEach(base => {
-      if (base.config?.tables) {
-        base.config.tables.forEach(table => {
-          airtableDestinations.push({
-            id: `${base.id}|${table.id}`,
-            name: `${base.config.name} - ${table.name}`,
-            type: 'airtable',
-            baseId: base.id,
-            tableId: table.id
-          });
-        });
-      }
-    });
-    
-    // Combine all destinations
-    destinations = [
-      ...webhookDestinations,
-      ...airtableDestinations
-    ];
-    
+    destinations = webhookDestinations;
+
     console.log('📋 [BACKGROUND] Loaded destinations:', {
       total: destinations.length,
-      webhooks: webhookDestinations.length,
-      airtable: airtableDestinations.length
+      webhooks: webhookDestinations.length
     });
     
     // Rebuild context menu when called from lifecycle/storage updates.
@@ -111,81 +89,28 @@ async function rebuildContextMenu() {
     console.log('🗑️ [BACKGROUND] Removed all existing context menu items');
     
     if (destinations.length === 0) {
-      // No destinations - show "Configure" option
-      chrome.contextMenus.create({
-        id: 'configure',
-        title: 'Configure Destinations',
-        contexts: ['page', 'selection', 'link', 'image']
-      });
-      console.log('📋 [BACKGROUND] No destinations - showing configure option');
+      // No destinations configured - show no context menu item at all
+      console.log('📋 [BACKGROUND] No destinations - context menu hidden');
       return;
     }
-    
+
     // Create parent menu
     chrome.contextMenus.create({
       id: 'sendToDestination',
-      title: 'Send to Webhook/Airtable',
+      title: 'Send to Webhook',
       contexts: ['page', 'selection', 'link', 'image']
     });
-    
-    // Group destinations by type
-    const webhooks = destinations.filter(d => d.type === 'webhook');
-    const airtables = destinations.filter(d => d.type === 'airtable');
-    
-    // Add webhook destinations
-    if (webhooks.length > 0) {
-      // Header
+
+    // Individual webhook items (with templates)
+    destinations.forEach(dest => {
       chrome.contextMenus.create({
-        id: 'webhook-header',
-        title: '🔗 Webhooks',
-        contexts: ['page', 'selection', 'link', 'image'],
-        parentId: 'sendToDestination',
-        enabled: false
-      });
-      
-      // Individual webhook items (with templates)
-      webhooks.forEach(dest => {
-        chrome.contextMenus.create({
-          id: `send-${dest.id}`,
-          title: dest.name,
-          contexts: ['page', 'selection', 'link', 'image'],
-          parentId: 'sendToDestination'
-        });
-      });
-    }
-    
-    // Add separator if both types exist
-    if (webhooks.length > 0 && airtables.length > 0) {
-      chrome.contextMenus.create({
-        id: 'separator',
-        type: 'separator',
+        id: `send-${dest.id}`,
+        title: dest.name,
         contexts: ['page', 'selection', 'link', 'image'],
         parentId: 'sendToDestination'
       });
-    }
-    
-    // Add Airtable destinations
-    if (airtables.length > 0) {
-      // Header
-      chrome.contextMenus.create({
-        id: 'airtable-header',
-        title: '📊 Airtable',
-        contexts: ['page', 'selection', 'link', 'image'],
-        parentId: 'sendToDestination',
-        enabled: false
-      });
-      
-      // Individual Airtable items
-      airtables.forEach(dest => {
-        chrome.contextMenus.create({
-          id: `send-${dest.id}`,
-          title: dest.name,
-          contexts: ['page', 'selection', 'link', 'image'],
-          parentId: 'sendToDestination'
-        });
-      });
-    }
-    
+    });
+
     console.log('✅ [BACKGROUND] Context menu rebuilt with', destinations.length, 'destinations');
     
   } catch (error) {
@@ -198,12 +123,6 @@ async function rebuildContextMenu() {
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === 'configure') {
-    // Open popup to configure
-    chrome.action.openPopup();
-    return;
-  }
-  
   if (info.menuItemId.startsWith('send-')) {
     const destinationId = info.menuItemId.replace('send-', '');
 
@@ -242,8 +161,6 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     try {
       if (destination.type === 'webhook') {
         await sendToWebhook(destination, payload);
-      } else if (destination.type === 'airtable') {
-        await sendToAirtable(destination, payload);
       }
       
       // Show success notification
@@ -317,57 +234,6 @@ async function sendToWebhook(destination, payload) {
   console.log('✅ [BACKGROUND] Webhook sent successfully');
 }
 
-// Send to Airtable
-async function sendToAirtable(destination, payload) {
-  const localData = await chrome.storage.local.get(['airtableConfigs']);
-  const airtableBases = localData.airtableConfigs || [];
-  const base = airtableBases.find(b => b.id === destination.baseId);
-  
-  if (!base?.config) {
-    throw new Error('Airtable base configuration not found');
-  }
-  
-  const tableConfig = base.config.configuredTables?.[destination.tableId];
-  if (!tableConfig?.fieldMappings) {
-    throw new Error('Table field mappings not configured');
-  }
-  
-  // Build Airtable record
-  const fields = {};
-  
-  if (tableConfig.fieldMappings.url) {
-    fields[tableConfig.fieldMappings.url] = payload.url;
-  }
-  
-  if (tableConfig.fieldMappings.title) {
-    fields[tableConfig.fieldMappings.title] = payload.title;
-  }
-  
-  if (tableConfig.fieldMappings.notes && payload.notes) {
-    fields[tableConfig.fieldMappings.notes] = payload.notes;
-  }
-  
-  // Send to Airtable API
-  const response = await fetch(
-    `https://api.airtable.com/v0/${base.config.baseId}/${destination.tableId}`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${base.config.token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ fields })
-    }
-  );
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Airtable failed: ${error.error?.message || response.statusText}`);
-  }
-  
-  console.log('✅ [BACKGROUND] Airtable record created');
-}
-
 // ✅ FIX: Debounced storage change handler
 let storageChangeTimeout = null;
 
@@ -383,16 +249,4 @@ chrome.storage.sync.onChanged.addListener((changes) => {
   }
 });
 
-chrome.storage.local.onChanged.addListener((changes) => {
-  if (changes.airtableConfigs) {
-    console.log('🔄 [BACKGROUND] Airtable configs changed, scheduling reload');
-    
-    // ✅ Debounce: Wait 500ms before reloading
-    clearTimeout(storageChangeTimeout);
-    storageChangeTimeout = setTimeout(() => {
-      loadDestinations();
-    }, 500);
-  }
-});
-
-console.log('✅ [BACKGROUND v2.0.6] Service worker initialized with duplicate fix');
+console.log('✅ [BACKGROUND] Service worker initialized with duplicate fix');
