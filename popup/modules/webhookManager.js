@@ -148,6 +148,21 @@ export const webhookManager = {
         <input type="text" class="webhook-url" value="${config.url}" data-index="${index}">
       </div>
       <div class="config-section">
+        <label>Headers:</label>
+        <div class="header-list" data-index="${index}">
+          ${(config.headers || []).map((h, i) => `
+            <div class="header-entry">
+              <input type="text" class="header-key" value="${h.key || ''}"
+                     data-webhook="${index}" data-header="${i}" placeholder="Header name (e.g. Authorization)">
+              <input type="text" class="header-value" value="${h.value || ''}"
+                     data-webhook="${index}" data-header="${i}" placeholder="Header value">
+              <button class="remove-header" data-webhook="${index}" data-header="${i}">×</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="add-header" data-index="${index}">+ Add Header</button>
+      </div>
+      <div class="config-section">
         <label>Templates:</label>
         <div class="template-list" data-index="${index}">
           ${config.templates.map((t, i) => `
@@ -179,6 +194,33 @@ export const webhookManager = {
    * Attach event listeners to webhook item
    */
   attachWebhookItemListeners(div, index) {
+    // Add header button
+    const addHeaderBtn = div.querySelector('.add-header');
+    if (addHeaderBtn) {
+      addHeaderBtn.addEventListener('click', () => this.addHeader(index));
+    }
+
+    // Remove header buttons
+    const removeHeaderBtns = div.querySelectorAll('.remove-header');
+    removeHeaderBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const webhookIndex = parseInt(btn.dataset.webhook);
+        const headerIndex = parseInt(btn.dataset.header);
+        this.removeHeader(webhookIndex, headerIndex);
+      });
+    });
+
+    // Header key/value inputs
+    const headerInputs = div.querySelectorAll('.header-key, .header-value');
+    headerInputs.forEach(input => {
+      input.addEventListener('change', () => {
+        const webhookIndex = parseInt(input.dataset.webhook);
+        const headerIndex = parseInt(input.dataset.header);
+        const field = input.classList.contains('header-key') ? 'key' : 'value';
+        this.updateHeaderField(webhookIndex, headerIndex, field, input.value);
+      });
+    });
+
     // Add template button
     const addTemplateBtn = div.querySelector('.add-template');
     if (addTemplateBtn) {
@@ -219,6 +261,48 @@ export const webhookManager = {
           this.deleteWebhook(index);
         }
       });
+    }
+  },
+
+  /**
+   * Add new header row
+   */
+  async addHeader(webhookIndex) {
+    const result = await chrome.storage.sync.get(['webhookConfigs']);
+    const configs = result.webhookConfigs || [];
+
+    if (configs[webhookIndex]) {
+      if (!configs[webhookIndex].headers) configs[webhookIndex].headers = [];
+      configs[webhookIndex].headers.push({ key: '', value: '' });
+      await chrome.storage.sync.set({ webhookConfigs: configs });
+      this.renderWebhookList();
+    }
+  },
+
+  /**
+   * Remove header row
+   */
+  async removeHeader(webhookIndex, headerIndex) {
+    const result = await chrome.storage.sync.get(['webhookConfigs']);
+    const configs = result.webhookConfigs || [];
+
+    if (configs[webhookIndex]?.headers) {
+      configs[webhookIndex].headers.splice(headerIndex, 1);
+      await chrome.storage.sync.set({ webhookConfigs: configs });
+      this.renderWebhookList();
+    }
+  },
+
+  /**
+   * Update a header's key or value
+   */
+  async updateHeaderField(webhookIndex, headerIndex, field, value) {
+    const result = await chrome.storage.sync.get(['webhookConfigs']);
+    const configs = result.webhookConfigs || [];
+
+    if (configs[webhookIndex]?.headers?.[headerIndex]) {
+      configs[webhookIndex].headers[headerIndex][field] = value;
+      await chrome.storage.sync.set({ webhookConfigs: configs });
     }
   },
 
@@ -282,6 +366,7 @@ export const webhookManager = {
       id: `webhook_${Date.now()}`,
       name: `Webhook ${configs.length + 1}`,
       url: '',
+      headers: [],
       templates: []
     };
 
@@ -395,6 +480,7 @@ export const webhookManager = {
         id: webhook.id,
         name: webhook.label || webhook.name || 'Unnamed Webhook', // Map label → name
         url: webhook.url || '',
+        headers: webhook.headers || [],
         templates: webhook.templates || []
       }));
     }
@@ -405,6 +491,7 @@ export const webhookManager = {
         id: webhook.id,
         name: webhook.label || webhook.name || 'Unnamed Webhook', // Map label → name
         url: webhook.url || '',
+        headers: webhook.headers || [],
         templates: webhook.templates || []
       }));
     }

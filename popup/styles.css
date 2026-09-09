@@ -64,8 +64,13 @@ body.dark-mode {
   color: #e5e5e5;
 }
 
+.dark-mode .header-entry .remove-header {
+  color: #e5e5e5;
+}
+
 .dark-mode .add-template,
-.dark-mode .add-airtable {
+.dark-mode .add-airtable,
+.dark-mode .add-header {
   background-color: #3b3b3b;
   color: #e5e5e5;
   border-color: #5a5a5a;
@@ -572,7 +577,8 @@ label {
 }
 
 .add-template,
-.add-airtable {
+.add-airtable,
+.add-header {
   background: none;
   border: 1px dashed #d1d5db;
   padding: 4px 8px;
@@ -584,7 +590,8 @@ label {
 }
 
 .add-template:hover,
-.add-airtable:hover {
+.add-airtable:hover,
+.add-header:hover {
   border-color: #2563eb;
   color: #2563eb;
   background-color: #eff6ff;
@@ -715,6 +722,33 @@ label {
   flex-grow: 1;
   font-size: 12px;
   padding: 2px 4px;
+}
+
+.header-list {
+  margin-top: 8px;
+}
+
+.header-entry {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.header-key,
+.header-value {
+  flex-grow: 1;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.header-entry .remove-header {
+  background: none;
+  border: none;
+  color: #4b5563;
+  padding: 0 4px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 /* Test Connection Feedback */

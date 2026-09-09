@@ -47,6 +47,7 @@ A Chrome extension for clipping URLs, notes, and files to webhooks and Airtable 
 
 ### Webhook Support
 - 🔄 **Multiple Webhooks**: Configure multiple webhook destinations
+- 🔐 **Custom Headers**: Add custom HTTP headers (e.g. `Authorization`) per webhook
 - 🏷️ **Templates**: Organize clips with custom templates
 - 📤 **Import/Export**: Backup and restore webhook configurations
 - ✅ **Test Connection**: Verify webhook URLs before sending

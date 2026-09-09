@@ -142,12 +142,18 @@ export const sender = {
         attachments: payload.attachments         // ← File attachments only!
       };
 
+      const headers = { 'Content-Type': 'application/json' };
+      (destination.config.headers || []).forEach(h => {
+        const key = h.key?.trim();
+        if (key) headers[key] = h.value ?? '';
+      });
+
       console.log('📤 [WEBHOOK] Sending to:', destination.config.url);
       console.log('📤 [WEBHOOK] Payload (filter-compatible):', webhookPayload);
 
       const response = await fetch(destination.config.url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(webhookPayload)
       });
 

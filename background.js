@@ -297,10 +297,16 @@ async function sendToWebhook(destination, payload) {
   };
   
   console.log('📤 [BACKGROUND] Webhook payload:', webhookPayload);
-  
+
+  const headers = { 'Content-Type': 'application/json' };
+  (webhook.headers || []).forEach(h => {
+    const key = h.key?.trim();
+    if (key) headers[key] = h.value ?? '';
+  });
+
   const response = await fetch(webhook.url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(webhookPayload)
   });
   
